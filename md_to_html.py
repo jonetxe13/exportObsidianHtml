@@ -5,12 +5,16 @@ import subprocess
 from urllib.parse import urlparse
 
 def convert_md_to_html(md_file_path, html_dir):
-    if md_file_path[-4:] == '.png' or not os.path.isfile(md_file_path):
+    if md_file_path[-7:] == '.png.md' or md_file_path[-7:] == '.jpg.md' or md_file_path[-7:] == '.pdf.md':
+        print(os.path.join(html_dir, os.path.basename(md_file_path[:-3])))
+        subprocess.run(['cp', md_file_path[:-3], os.path.join(html_dir, os.path.basename(md_file_path[:-3]))])
+        return
+    if not os.path.isfile(md_file_path):
         return
     html_file_path = os.path.join(html_dir, os.path.splitext(os.path.basename(md_file_path))[0] + '.html')
     with open(md_file_path, 'r') as file:
         content = file.read()
-    content = re.sub(r'\[\[(.*?)\]\]', r'<a href="\1.html">\1</a>', content)
+        content = re.sub(r'\[\[(.*?)\]\]', lambda m: '<a href="{}.html">{}</a>'.format(m.group(1), m.group(1)) if m.group(1)[-3:] == '.md' else '<a href="{}">{}</a>'.format(m.group(1), m.group(1)), content)
     with open(md_file_path + ".tmp", 'w') as file:
         file.write(content)
     subprocess.run(['pandoc','--template=simple.latex', md_file_path + ".tmp", '-o', html_file_path])
@@ -36,7 +40,7 @@ def process_file(md_file_path, html_dir):
     md_file_paths = [os.path.join("/home/jonetxe13/Desktop/obsidian/", link + '.md') for link in md_links]
     convert_md_to_html(md_file_path, html_dir)
     for linked_md_file_path in md_file_paths:
-        print(linked_md_file_path)
+        # print(linked_md_file_path)
         convert_md_to_html(linked_md_file_path, html_dir)
 
 def main():
